@@ -61,6 +61,23 @@ Se incorporó un nuevo script de extracción para el módulo de contrataciones d
    - Implementación: `df_contrataciones.to_csv(csv_file, sep=";", index=False)`.
    - Nombre de salida por año: `contrataciones_bienes_servicios_usac_{year}.csv` en `data/raw/`.
 
+#### Becas
+Se incorporó un nuevo script de extracción para el módulo de becas de la USAC.
+
+1. **Nuevo endpoint y cobertura de años**
+   - Endpoint utilizado: `https://www3.usac.edu.gt/cip/muestra15.php`.
+   - Años de extracción: `2022`, `2023`, `2024` y `2025`.
+   - Script implementado: `scraper/becas.py`.
+
+2. **Lectura de encabezados desde la tabla fuente**
+   - Se usa la primera fila HTML como encabezados reales.
+   - Implementación: `pd.read_html(StringIO(respuesta.text), header=0)`.
+
+3. **Exportación en CSV con punto y coma**
+   - Se mantiene `sep=";"` para compatibilidad regional.
+   - Implementación: `df_becas.to_csv(csv_file, sep=";", index=False)`.
+   - Nombre de salida por año: `becas_usac_{year}.csv` en `data/raw/`.
+
 ---
 
 ## 2. Fase de Preparación
