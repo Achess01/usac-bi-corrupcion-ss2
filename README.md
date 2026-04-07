@@ -78,6 +78,26 @@ Se incorporó un nuevo script de extracción para el módulo de becas de la USAC
    - Implementación: `df_becas.to_csv(csv_file, sep=";", index=False)`.
    - Nombre de salida por año: `becas_usac_{year}.csv` en `data/raw/`.
 
+#### Nóminas de pago
+Se incorporó un script específico para extraer nóminas mensuales de pago desde el portal de la USAC.
+
+1. **Endpoint y parámetros del formulario**
+   - Endpoint utilizado: `https://www3.usac.edu.gt/cip/muestra4tb.php`.
+   - Parámetros enviados en `datos_formulario`:
+     - `tipo=1`
+     - `mes` con valores de `1` a `12`
+     - `anyo` con valores de `2022` a `2026`
+   - Script implementado: `scraper/nominas_pago.py`.
+
+2. **Extracción mensual por año**
+   - Se recorre cada combinación año-mes para obtener un corte mensual independiente.
+   - Se utiliza `pd.read_html(StringIO(respuesta.text), header=0)` para respetar los encabezados de tabla de origen.
+
+3. **Salida en archivos separados por período**
+   - Se genera un CSV por cada combinación año-mes con separador punto y coma (`sep=";"`).
+   - Formato de archivo: `nominas_pago_usac_{year}_{month:02d}.csv`.
+   - Ruta de salida: `data/raw/`.
+
 ---
 
 ## 2. Fase de Preparación
