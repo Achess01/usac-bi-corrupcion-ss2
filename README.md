@@ -1,31 +1,3 @@
-# Proyecto BI SS2
-
-Este repositorio contiene el flujo de scraping y preparación de datos para el análisis de **Corrupción en la USAC**.
-
-## Estructura general del proyecto
-
-- `scraper/`: scripts de extracción.
-- `data/raw/`: datos crudos extraídos.
-- `data/clean/`: datos transformados/limpios.
-- `sql/`: consultas y artefactos SQL.
-- `superset/`: artefactos de visualización/dashboard.
-
-## Fase de descubrimiento
-
-### Scraping de Compras Directas
-
-Durante esta fase se revisó el comportamiento de la fuente y se aplicaron mejoras puntuales al flujo actual:
-
-1. **Encabezados desde la tabla origen**
-   - Se configuró la lectura de tablas HTML para usar la primera fila como encabezado real.
-   - Implementación: `pd.read_html(StringIO(respuesta.text), header=0)`.
-   - Resultado: los nombres de columnas en el DataFrame coinciden con los encabezados oficiales del sitio.
-
-2. **Exportación CSV con separador punto y coma**
-   - Se actualizó la escritura de CSV para usar `sep=";"`.
-   - Implementación: `df_compras.to_csv(csv_file, sep=";", index=False)`.
-   - Resultado: mejor compatibilidad con herramientas de hoja de cálculo en configuraciones regionales hispanohablantes.
-
 # Análisis de Inteligencia de Negocios: Redes de Clientelismo en la USAC (2021-2026)
 
 **Autor:** Alexander Tzoc Alvarado
@@ -34,7 +6,7 @@ Durante esta fase se revisó el comportamiento de la fuente y se aplicaron mejor
 
 ---
 
-## Resumen Ejecutivo
+## Introducción
 Este proyecto de Inteligencia de Negocios (BI) analiza y cruza datos públicos para identificar posibles patrones de clientelismo, nepotismo y pago de favores durante la administración del rector Walter Mazariegos en la Universidad de San Carlos de Guatemala (USAC). 
 
 A través de la extracción automatizada y consolidación de datos en un Data Warehouse (PostgreSQL), se visualizan (Apache Superset) las relaciones entre los electores del Colegio Electoral Universitario de 2022, las nóminas salariales y las compras directas adjudicadas.
@@ -52,10 +24,42 @@ A través de la extracción automatizada y consolidación de datos en un Data Wa
 * **Nóminas y Contratos USAC:** Portal de Información Pública de la USAC.
 * **Adjudicaciones del Estado:** Portal de Datos Abiertos OCDS de Guatecompras.
 
-### 1.3 Perfilado de Datos y Retos Técnicos (Data Profiling)
+### 1.3 Perfilado de Datos y Retos Técnicos
 > **Nota Técnica:** Se documenta un hallazgo importante respecto a la transparencia institucional. El portal de la USAC no permite descargas directas ni tiene URLs estáticas. La información está oculta tras un formularios dinámicos. 
 * **Solución aplicada:** Se realizó ingeniería inversa a la petición HTTP y se construyó un script en Python (`requests`) que inyecta los *payloads* del formulario (ej. `anyo=2024`) para forzar la respuesta del servidor y extraer las tablas HTML directamente.
 * **Calidad de los datos:** .
+
+### 1.4 Scraping de Datos
+
+#### Compras directas
+Durante esta fase se revisó el comportamiento de la fuente y se aplicaron mejoras puntuales al flujo actual:
+
+1. **Encabezados desde la tabla origen**
+   - Se configuró la lectura de tablas HTML para usar la primera fila como encabezado real.
+   - Implementación: `pd.read_html(StringIO(respuesta.text), header=0)`.
+   - Resultado: los nombres de columnas en el DataFrame coinciden con los encabezados oficiales del sitio.
+
+2. **Exportación CSV con separador punto y coma**
+   - Se actualizó la escritura de CSV para usar `sep=";"`.
+   - Implementación: `df_compras.to_csv(csv_file, sep=";", index=False)`.
+   - Resultado: mejor compatibilidad con herramientas de hoja de cálculo en configuraciones regionales hispanohablantes.
+
+#### Contrataciones de bienes y servicios
+Se incorporó un nuevo script de extracción para el módulo de contrataciones de bienes y servicios de la USAC.
+
+1. **Nuevo endpoint y cobertura de años**
+   - Endpoint utilizado: `https://www3.usac.edu.gt/cip/muestra11.php`.
+   - Años de extracción: `2023`, `2024`, `2025` y `2026`.
+   - Script implementado: `scraper/contrataciones_bienes_servicios.py`.
+
+2. **Lectura de encabezados desde la tabla fuente**
+   - Se usa la primera fila HTML como encabezados reales.
+   - Implementación: `pd.read_html(StringIO(respuesta.text), header=0)`.
+
+3. **Exportación en CSV con punto y coma**
+   - Se mantiene `sep=";"` para compatibilidad regional.
+   - Implementación: `df_contrataciones.to_csv(csv_file, sep=";", index=False)`.
+   - Nombre de salida por año: `contrataciones_bienes_servicios_usac_{year}.csv` en `data/raw/`.
 
 ---
 
