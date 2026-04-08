@@ -1,8 +1,12 @@
 # Análisis de Inteligencia de Negocios: Redes de Clientelismo en la USAC (2021-2026)
 
 **Autor:** Alexander Tzoc Alvarado
+
 **Curso:** Seminario de Sistemas 2
+
 **Stack Tecnológico:** Python (Pandas, Requests) | PostgreSQL | Apache Superset
+
+**Repositorio:** [Repositorio de Github](https://github.com/Achess01/usac-bi-corrupcion-ss2)
 
 ---
 

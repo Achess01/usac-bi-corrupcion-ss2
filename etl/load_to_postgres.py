@@ -114,6 +114,11 @@ def cargar_alias_personas(path: Path = Path("data/clean/person_alias_map.csv")) 
     if "alias_name" not in alias_df.columns or "canonical_full_name" not in alias_df.columns:
         return {}
 
+    if "approved_manual" in alias_df.columns:
+        aprobados = alias_df["approved_manual"].astype(str).str.strip().str.lower()
+        permitidos = {"1", "true", "t", "yes", "y", "si", "sí"}
+        alias_df = alias_df[aprobados.isin(permitidos)]
+
     alias_map: dict[str, str] = {}
     for _, row in alias_df.iterrows():
         alias = normalizar_texto(row["alias_name"])

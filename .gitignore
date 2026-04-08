@@ -194,4 +194,6 @@ pyrightconfig.json
 .ionide
 
 # Remove clean data
-data/clean
+!data/clean
+data/clean/*
+!data/clean/person_alias_map.csv

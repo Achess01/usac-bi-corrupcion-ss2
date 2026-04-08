@@ -9,6 +9,7 @@ from limpiar_contrataciones_bienes_servicios import (
 )
 from limpiar_nominas import limpiar_nominas
 from limpiar_votantes import limpiar_votantes
+from generar_alias_candidatos import generar_alias_candidatos
 
 
 def main() -> None:
@@ -20,6 +21,7 @@ def main() -> None:
     limpiar_contrataciones_bienes_servicios()
     limpiar_becas()
     limpiar_nominas()
+    generar_alias_candidatos()
 
     print("Limpieza completada. Archivos disponibles en data/clean/.")
 
