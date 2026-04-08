@@ -168,25 +168,68 @@ venv/bin/python clean/ejecutar_limpieza.py
 
 > Resultado actual de la fase: se generaron archivos limpios para todas las familias de datos extraídas (`votantes`, `compras`, `contrataciones`, `becas` y `nóminas`).
 
-### 2.2 Plan de inserción a PostgreSQL (Esquema Estrella)
+---
 
-Se implementó el script `clean/load_to_postgres.py` para cargar los datos limpios al esquema definido en `sql/schema.sql`.
+## 3. Fase de Planeación
 
-#### Orden de carga
+### 3.1 Arquitectura del Sistema
+El flujo de datos del proyecto se planificó bajo una arquitectura de BI en capas:
 
-1. **Dimensiones:** `dim_date` -> `dim_department` -> `dim_provider` -> `dim_person`.
-2. **Hechos:** `fact_payroll` -> `fact_purchases` -> `fact_contracts` -> `fact_scholarships`.
+- **Extracción y limpieza:** Python (`scraper/`, `clean/`)
+- **Carga y modelado analítico:** PostgreSQL
+- **Consumo y visualización:** Apache Superset
 
-#### Reglas de integración aplicadas
+### 3.2 Modelo de Datos (Esquema Estrella)
+Se definió un **modelo estrella** para optimizar consultas analíticas y cruces entre personas, proveedores, unidades y tiempo.
 
-- **`dim_date`:** `date_id` en formato `YYYYMMDD`.
-  - Para nóminas se usa el día 1 del mes (`YYYYMM01`).
-- **`dim_department`:** se intenta separar `dependencia` y `unidad` desde cadenas compuestas (`--`, ` - `).
-- **`dim_provider`:** se integra por `provider_name_norm` como clave de negocio principal.
-- **`dim_person`:** `full_name` se conserva en formato normalizado `APELLIDOS NOMBRES`.
-- **Alias de personas:** el archivo `data/clean/person_alias_map.csv` permite mapear variantes de nombres (ej. casada/no casada) a un nombre canónico.
+La estructura implementada en `sql/schema.sql` y representada en `sql/diagram.png` contiene:
 
-#### Variables de entorno requeridas
+- **Dimensiones**
+  - `dim_person` (`person_id`, `full_name`, `is_voter`, `state_job_voter`)
+  - `dim_provider` (`provider_id`, `provider_name`, `nit`)
+  - `dim_department` (`department_id`, `dependency_name`, `unit_name`)
+  - `dim_date` (`date_id`, `full_date`, `year`, `month`, `day`)
+
+- **Hechos**
+  - `fact_payroll` (`person_id`, `department_id`, `date_id`, `renglon`, `base_salary`, `nominal_salary`, `liquid_salary`)
+  - `fact_purchases` (`provider_id`, `department_id`, `date_id`, `description`, `quantity`, `unit_price`, `total_amount`)
+  - `fact_contracts` (`provider_id`, `department_id`, `date_id`, `description`, `renglon`, `units`, `total_amount`)
+  - `fact_scholarships` (`person_id`, `date_start_id`, `date_end_id`, `scholarship_type`, `amount`)
+
+### 3.3 Reglas de Integración Planificadas
+
+- Carga de dimensiones antes que hechos.
+- `date_id` en formato `YYYYMMDD`.
+- Para nóminas, `date_id` se construye con día `01` del mes (`YYYYMM01`).
+- Integración de proveedores por `provider_name_norm`.
+- Integración de personas por nombre normalizado y mapa de alias manual (`data/clean/person_alias_map.csv`).
+
+---
+
+## 4. Fase de Construcción
+
+La fase de construcción implementa el esquema físico y la carga ETL hacia PostgreSQL.
+
+### 4.1 Construcción del Esquema
+
+- DDL principal: `sql/schema.sql`
+- Diagrama de referencia: `sql/diagram.png`
+- Se crearon:
+  - llaves primarias (`PK`) en dimensiones y hechos
+  - llaves foráneas (`FK`) para garantizar integridad referencial entre hechos y dimensiones
+
+### 4.2 Script de Carga ETL
+
+La carga al Data Warehouse se implementó en `etl/load_to_postgres.py` con `pandas` + `SQLAlchemy`:
+
+1. Lee datasets limpios desde `data/clean/`.
+2. Construye dimensiones: `dim_date`, `dim_department`, `dim_provider`, `dim_person`.
+3. Resuelve llaves foráneas mediante lookups.
+4. Inserta hechos: `fact_payroll`, `fact_purchases`, `fact_contracts`, `fact_scholarships`.
+
+### 4.3 Ejecución de la Carga
+
+Variables de entorno:
 
 ```bash
 export DB_HOST=localhost
@@ -196,49 +239,23 @@ export DB_USER=tu_usuario
 export DB_PASSWORD=tu_password
 ```
 
-#### Ejecución de carga
-
-Carga incremental (append):
+Carga incremental:
 
 ```bash
-venv/bin/python clean/load_to_postgres.py
+venv/bin/python etl/load_to_postgres.py
 ```
 
 Carga completa (truncate + recarga):
 
 ```bash
-venv/bin/python clean/load_to_postgres.py --full-refresh
+venv/bin/python etl/load_to_postgres.py --full-refresh
 ```
 
----
+### 4.4 Control de Calidad en Construcción
 
-## 3. Fase de Planeación
-
-### 3.1 Arquitectura del Sistema
-El flujo de datos obedece a una arquitectura moderna de BI:
-* **Extracción/Limpieza:** Python
-* **Data Warehouse:** PostgreSQL (Desplegado localmente)
-* **Capa Semántica y BI:** Apache Superset
-
-### 3.2 Modelo de Datos
-Se implementó un Modelo Estrella para optimizar las consultas analíticas:
-
-* **Tablas de Hechos (Fact Tables):**
-  * `fact_nomina`: Contiene los pagos mensuales realizados (salario, bonos, renglón).
-  * `fact_compras`: Contiene los montos adjudicados en Guatecompras.
-* **Tablas de Dimensiones:**
-  * `dim_persona`: Directorio único de empleados y votantes.
-  * `dim_proveedor`: Datos de las empresas contratadas.
-  * `dim_tiempo`: Meses y años de análisis (2021-2026).
-
----
-
-## 4. Fase de Construcción
-
-La carga de datos al Data Warehouse en PostgreSQL se realizó mediante el script `load_to_postgres.py` utilizando la librería `SQLAlchemy`.
-
-* Se crearon los esquemas utilizando sentencias DDL puras (ver archivo `/sql/create_schema.sql`).
-* Se definieron llaves primarias (`PK`) y llaves foráneas (`FK`) para mantener la integridad referencial y permitir que el Cubo OLAP en Superset pueda cruzar la información sin errores.
+- Validación de consistencia de esquema antes de cargar.
+- Uso de reglas de normalización para personas, proveedores y unidades.
+- Uso de alias manuales aprobados para variantes de nombres de personas.
 
 ---
 
