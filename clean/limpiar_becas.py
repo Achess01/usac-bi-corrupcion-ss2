@@ -7,6 +7,26 @@ import unicodedata
 import pandas as pd
 
 
+CONNECTORES_APELLIDO = {
+    "DA",
+    "DAS",
+    "DE",
+    "DEL",
+    "DELA",
+    "DELAS",
+    "DELOS",
+    "DI",
+    "DO",
+    "DOS",
+    "LA",
+    "LAS",
+    "LOS",
+    "VAN",
+    "VON",
+    "Y",
+}
+
+
 def quitar_tildes(texto: str) -> str:
     normalizado = unicodedata.normalize("NFD", texto)
     sin_tildes = "".join(c for c in normalizado if unicodedata.category(c) != "Mn")
@@ -16,6 +36,28 @@ def quitar_tildes(texto: str) -> str:
 def normalizar_texto(texto: str) -> str:
     base = quitar_tildes(str(texto)).upper().strip()
     return " ".join(base.split())
+
+
+def extraer_grupo_apellido(tokens: list[str], fin: int) -> tuple[list[str], int]:
+    inicio = fin
+    while inicio - 1 >= 0 and tokens[inicio - 1] in CONNECTORES_APELLIDO:
+        inicio -= 1
+    return tokens[inicio : fin + 1], inicio - 1
+
+
+def apellidos_nombres(nombre_original: str) -> str:
+    tokens = normalizar_texto(nombre_original).split()
+    if len(tokens) <= 2:
+        return " ".join(tokens)
+
+    primer_apellido, indice = extraer_grupo_apellido(tokens, len(tokens) - 1)
+    segundo_apellido: list[str] = []
+
+    if indice >= 0:
+        segundo_apellido, indice = extraer_grupo_apellido(tokens, indice)
+
+    nombres = tokens[: indice + 1] if indice >= 0 else []
+    return " ".join(segundo_apellido + primer_apellido + nombres)
 
 
 def extraer_anio_archivo(nombre_archivo: str) -> int:
@@ -46,7 +88,8 @@ def limpiar_archivo(archivo_entrada: Path, directorio_salida: Path) -> Path:
         df["flag_anio_inicio_inconsistente"] = df["fecha_inicio"].dt.year != anio_archivo
 
     if "BENEFICIARIO" in df.columns:
-        df["BENEFICIARIO_NORM"] = df["BENEFICIARIO"].fillna("").map(normalizar_texto)
+        df["BENEFICIARIO"] = df["BENEFICIARIO"].fillna("").map(apellidos_nombres)
+        df["BENEFICIARIO_NORM"] = df["BENEFICIARIO"]
     if "TIPO DE BECA" in df.columns:
         df["TIPO_BECA_NORM"] = df["TIPO DE BECA"].fillna("").map(normalizar_texto)
 
