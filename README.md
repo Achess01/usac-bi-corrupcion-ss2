@@ -164,6 +164,48 @@ venv/bin/python clean/ejecutar_limpieza.py
 
 > Resultado actual de la fase: se generaron archivos limpios para todas las familias de datos extraídas (`votantes`, `compras`, `contrataciones`, `becas` y `nóminas`).
 
+### 2.2 Plan de inserción a PostgreSQL (Esquema Estrella)
+
+Se implementó el script `clean/load_to_postgres.py` para cargar los datos limpios al esquema definido en `sql/schema.sql`.
+
+#### Orden de carga
+
+1. **Dimensiones:** `dim_date` -> `dim_department` -> `dim_provider` -> `dim_person`.
+2. **Hechos:** `fact_payroll` -> `fact_purchases` -> `fact_contracts` -> `fact_scholarships`.
+
+#### Reglas de integración aplicadas
+
+- **`dim_date`:** `date_id` en formato `YYYYMMDD`.
+  - Para nóminas se usa el día 1 del mes (`YYYYMM01`).
+- **`dim_department`:** se intenta separar `dependencia` y `unidad` desde cadenas compuestas (`--`, ` - `).
+- **`dim_provider`:** se integra por `provider_name_norm` como clave de negocio principal.
+- **`dim_person`:** `full_name` se conserva en formato normalizado `APELLIDOS NOMBRES`.
+- **Alias de personas:** el archivo `data/clean/person_alias_map.csv` permite mapear variantes de nombres (ej. casada/no casada) a un nombre canónico.
+
+#### Variables de entorno requeridas
+
+```bash
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=tu_base
+export DB_USER=tu_usuario
+export DB_PASSWORD=tu_password
+```
+
+#### Ejecución de carga
+
+Carga incremental (append):
+
+```bash
+venv/bin/python clean/load_to_postgres.py
+```
+
+Carga completa (truncate + recarga):
+
+```bash
+venv/bin/python clean/load_to_postgres.py --full-refresh
+```
+
 ---
 
 ## 3. Fase de Planeación

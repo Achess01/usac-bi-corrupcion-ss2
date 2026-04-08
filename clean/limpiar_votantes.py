@@ -27,9 +27,11 @@ CONNECTORES_APELLIDO = {
 
 
 def quitar_tildes(texto: str) -> str:
-    normalizado = unicodedata.normalize("NFD", texto)
+    protegido = str(texto).replace("ñ", "__enie_lower__").replace("Ñ", "__enie_upper__")
+    normalizado = unicodedata.normalize("NFD", protegido)
     sin_tildes = "".join(c for c in normalizado if unicodedata.category(c) != "Mn")
-    return unicodedata.normalize("NFC", sin_tildes)
+    restaurado = unicodedata.normalize("NFC", sin_tildes)
+    return restaurado.replace("__enie_lower__", "ñ").replace("__enie_upper__", "Ñ")
 
 
 def normalizar_texto(texto: str) -> str:
