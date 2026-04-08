@@ -1,0 +1,44 @@
+services:
+  superset_db:
+    image: postgres:16
+    container_name: superset_metadata_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${SUPERSET_DB_NAME}
+      POSTGRES_USER: ${SUPERSET_DB_USER}
+      POSTGRES_PASSWORD: ${SUPERSET_DB_PASSWORD}
+    volumes:
+      - superset_db_data:/var/lib/postgresql/data
+    networks:
+      - superset_net
+
+  superset:
+    build:
+      context: ./superset
+    container_name: superset_app
+    restart: unless-stopped
+    depends_on:
+      - superset_db
+    ports:
+      - "8088:8088"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+      SQLALCHEMY_DATABASE_URI: postgresql+psycopg2://${SUPERSET_DB_USER}:${SUPERSET_DB_PASSWORD}@superset_db:5432/${SUPERSET_DB_NAME}
+      SUPERSET_ADMIN_USERNAME: ${SUPERSET_ADMIN_USERNAME}
+      SUPERSET_ADMIN_FIRSTNAME: ${SUPERSET_ADMIN_FIRSTNAME}
+      SUPERSET_ADMIN_LASTNAME: ${SUPERSET_ADMIN_LASTNAME}
+      SUPERSET_ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL}
+      SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD}
+    command: ["/app/superset-init.sh"]
+    networks:
+      - superset_net
+
+volumes:
+  superset_db_data:
+
+networks:
+  superset_net:
+    driver: bridge

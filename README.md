@@ -218,6 +218,8 @@ La fase de construcción implementa el esquema físico y la carga ETL hacia Post
   - llaves primarias (`PK`) en dimensiones y hechos
   - llaves foráneas (`FK`) para garantizar integridad referencial entre hechos y dimensiones
 
+![diagrama](./sql/diagram.png)
+
 ### 4.2 Script de Carga ETL
 
 La carga al Data Warehouse se implementó en `etl/load_to_postgres.py` con `pandas` + `SQLAlchemy`:
@@ -263,10 +265,42 @@ venv/bin/python etl/load_to_postgres.py --full-refresh
 
 Los resultados se presentan a través de tableros interactivos en **Apache Superset**. 
 
-### 5.1 Hallazgos Principales
+### 5.1 Instalación de Superset con Docker
+
+- `docker-compose.superset.yml`
+- `superset/Dockerfile`
+- `superset/superset-init.sh`
+- `superset/superset_config.py`
+- `.env.superset.example`
+
+Pasos:
+
+```bash
+cp .env.superset.example .env.superset
+docker compose --env-file .env.superset -f docker-compose.superset.yml up -d --build
+```
+
+Acceso:
+
+- `http://localhost:8088`
+
+### 5.2 Conexión con la Base de Datos PostgreSQL
 
 
-### 5.2 Capturas del Dashboard
+Cadena SQLAlchemy para registrar la conexión en Superset:
+
+```text
+postgresql+psycopg2://<db_user>:<db_password>@host.docker.internal:5435/<db_name>
+```
+
+Referencia detallada de instalación y conexión:
+
+- `superset/README.md`
+
+### 5.3 Hallazgos Principales
+
+
+### 5.4 Capturas del Dashboard
 
 ---
 
