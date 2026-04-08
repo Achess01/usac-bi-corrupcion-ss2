@@ -103,11 +103,66 @@ Se incorporó un script específico para extraer nóminas mensuales de pago desd
 ## 2. Fase de Preparación
 
 ### 2.1 Proceso de ETL (Extracción, Transformación y Carga)
-El proceso de limpieza se realizó utilizando **Python (Pandas)**. Los pasos clave incluyeron:
-1. **Homologación de Cadenas:** Conversión de todos los nombres a mayúsculas, eliminación de tildes y espacios en blanco adicionales.
-2. **Estructuración de Nombres:** Separación o unión de las columnas de "Nombres" y "Apellidos" para estandarizar las bases del portal del estado vs. el portal de la USAC.
+El proceso de limpieza se implementó con **Python (Pandas)** y se organiza en scripts dedicados dentro del directorio `clean/`.
 
-Los scripts de transformación se encuentran en el directorio `/scraper` y los datos resultantes en `/data/clean`.
+#### Limpiezas implementadas
+
+1. **Votantes (Plaza Pública)**
+   - Script: `clean/limpiar_votantes.py`.
+   - Transformaciones:
+     - Eliminación de tildes y normalización de espacios.
+     - Conversión a mayúsculas.
+     - Reordenamiento de nombres a formato **APELLIDOS NOMBRES**.
+     - Conservación de conectores de apellido (`DE`, `DEL`, `LA`, `VON`, etc.).
+   - Salida: `data/clean/votantes_mazariegos_plazapublica_clean.csv`.
+
+2. **Nóminas de pago**
+   - Script: `clean/limpiar_nominas.py`.
+   - Transformaciones:
+     - Conversión de columnas monetarias a tipo numérico.
+     - Separación de `MES DE PAGO` en `mes_pago` y `anio_pago`.
+     - Adición de `mes_archivo` y `anio_archivo` a partir del nombre del archivo.
+     - Regla de calidad: `flag_periodo_inconsistente` cuando el período del registro no coincide con el del archivo.
+     - Normalización de empleado en columna auxiliar `EMPLEADO_NORM`.
+   - Salidas: `data/clean/nominas_pago_usac_YYYY_MM_clean.csv`.
+
+3. **Compras directas**
+   - Script: `clean/limpiar_compras_directas.py`.
+   - Transformaciones:
+     - Conversión de columnas numéricas (`CANTIDAD`, `PRECIO UNITARIO`, `PRECIO TOTAL`).
+     - Parseo de `FECHA LIQUIDACION` a fecha.
+     - Regla de calidad por año: `flag_anio_inconsistente`.
+     - Normalización de texto en columnas clave y `NIT_NORM` para cruces.
+
+4. **Contrataciones de bienes y servicios**
+   - Script: `clean/limpiar_contrataciones_bienes_servicios.py`.
+   - Transformaciones:
+     - Conversión de montos a tipo numérico.
+     - Parseo de `FECHA` (formato `dd/mm/yy`).
+     - Regla de calidad por año: `flag_anio_inconsistente`.
+     - Normalización de proveedor y `NIT_PROVEEDOR_NORM` para homologación.
+
+5. **Becas**
+   - Script: `clean/limpiar_becas.py`.
+   - Transformaciones:
+     - Conversión de `MONTO` a numérico.
+     - Parseo de `FECHA DE INICIO` y `FECHA FIN`.
+     - Regla de calidad temporal: `flag_fechas_invertidas`.
+     - Regla de calidad por año: `flag_anio_inicio_inconsistente`.
+     - Normalización de `BENEFICIARIO` y `TIPO DE BECA`.
+
+#### Orquestación de limpieza
+
+- Script maestro: `clean/ejecutar_limpieza.py`.
+- Ejecuta todas las limpiezas de forma secuencial y deja resultados en `data/clean/`.
+
+Comando sugerido:
+
+```bash
+venv/bin/python clean/ejecutar_limpieza.py
+```
+
+> Resultado actual de la fase: se generaron archivos limpios para todas las familias de datos extraídas (`votantes`, `compras`, `contrataciones`, `becas` y `nóminas`).
 
 ---
 
