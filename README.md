@@ -297,13 +297,63 @@ Referencia detallada de instalación y conexión:
 
 - `superset/README.md`
 
-### 5.3 Hallazgos Principales
+### 5.3 Dashboard de Transparencia USAC
 
+Vista general del tablero consolidado:
 
-### 5.4 Capturas del Dashboard
+![Dashboard Transparencia USAC](./superset/assets/dashboard.png)
 
----
+Vista complementaria con detalle de proveedores y ranking salarial:
 
-## 6. Fase de Operacionalización
+![Dashboard Transparencia USAC - Vista 2](./superset/assets/dashboard2.png)
 
-* **Despliegue Futuro:** Esto permite que, en un entorno de producción, el tablero pueda ser restaurado o actualizado utilizando la CLI de Superset
+**Comentario general del dashboard:**
+El tablero integra en una sola vista el comportamiento salarial de votantes vs no votantes, la concentración de contratos 029 en actores específicos, la distribución de proveedores y el ranking de aliados con mayores ingresos. Esto permite detectar patrones consistentes de concentración de beneficios en nómina y contrataciones.
+
+### 5.4 Evolución salarial: Votantes vs No Votantes
+
+![Evolución salarial: Votantes vs No Votantes](./superset/assets/evolucion-salarial-votantes-vs-no-votantes.jpg)
+
+**Comentario:**
+La serie temporal muestra que, a partir de 2022, la línea de votantes (`is_voter = True`) se mantiene sistemáticamente por encima del grupo no votante, con picos periódicos más altos en salario nominal promedio.
+
+**Conclusión:**
+Existe una brecha persistente favorable al grupo votante en el salario promedio nominal. Este comportamiento es consistente con la hipótesis de incrementos salariales anómalos posteriores al proceso electoral.
+
+### 5.5 Votantes con Contratos 029
+
+![Votantes con Contratos 029](./superset/assets/votantes-con-contratos-029.jpg)
+
+**Comentario:**
+La gráfica de barras evidencia montos acumulados relevantes en contratos 029 para votantes identificados, con concentración visible en pocos nombres.
+
+**Conclusión:**
+Se observa concentración de contratación 029 en actores vinculados al bloque de votantes analizado, lo cual refuerza la hipótesis de asignación selectiva de contratos.
+
+### 5.6 Proveedores del Rector
+
+![Proveedores del Rector](./superset/assets/proveedores-del-rector.jpg)
+
+**Comentario:**
+La distribución por proveedor muestra participación dominante de empresas y personas vinculadas a servicios de viajes y movilidad.
+
+**Conclusión:**
+Los mayores proveedores del rector son proveedores relacionados con **viajes y transporte**, sugiriendo una concentración temática del gasto en ese rubro.
+
+### 5.7 Aliados de Mazariegos que más ganan
+
+![Aliados de Mazariegos que más ganan](./superset/assets/aliados-de-mazariegos-que-mas-ganan.jpg)
+
+**Comentario:**
+La tabla ordenada por `AVG(nominal_salary)` destaca un subconjunto de aliados con salarios promedios significativamente superiores al resto.
+
+**Conclusión:**
+El ranking confirma una élite salarial dentro del grupo aliado, compatible con un patrón de beneficios concentrados en actores específicos.
+
+### 5.8 Síntesis de Hallazgos
+
+- Se identifica una brecha salarial sostenida entre votantes y no votantes.
+- Se observa concentración de montos 029 en votantes concretos.
+- El gasto en proveedores del rector presenta sesgo hacia viajes y transporte.
+- El top de aliados muestra niveles salariales altos y concentrados.
+
